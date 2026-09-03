@@ -1,60 +1,95 @@
-'use client'
+'use client';
 
-import { supabase } from '@/lib/supabase'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
-export default function RecetasPage() {
-  const [recetas, setRecetas] = useState<any[]>([])
-  const [cargando, setCargando] = useState(true)
+export default function RegistroPage() {
+  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-  useEffect(() => {
-    const cargarRecetas = async () => {
-      const { data, error } = await supabase
-        .from('recetas')
-        .select('*, autor:autor_id(nombre)')
-        .order('creado_en', { ascending: false })
+  const handleRegistro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-      if (data) setRecetas(data)
-      setCargando(false)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nombre }
+      }
+    });
+
+    if (error) {
+      setError(error.message);
+      return;
     }
 
-    cargarRecetas()
-  }, [])
-
-  if (cargando) return <div className="p-6">Cargando recetas...</div>
+    router.push('/dashboard');
+  };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">🍳 Todas las Recetas</h1>
-      
-      {recetas.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">No hay recetas publicadas todavía.</p>
-          <p className="text-gray-400 mt-2">¡Sé el primero en publicar una receta!</p>
+    <div style={{ maxWidth: '420px', margin: '60px auto', padding: '25px', border: '1px solid #e0e0e0', borderRadius: '10px' }}>
+      <h1 style={{ textAlign: 'center', color: '#333' }}>Crear Cuenta</h1>
+      <form onSubmit={handleRegistro} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div>
+          <label style={{ fontWeight: 'bold' }}>Nombre completo:</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
+          />
         </div>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-6">
-          {recetas.map((receta) => (
-            <Link 
-              key={receta.id} 
-              href={`/recetas/${receta.id}`}
-              className="border rounded-lg p-5 hover:shadow-lg transition-shadow bg-white"
-            >
-              <h2 className="text-xl font-semibold mb-2 text-orange-600">{receta.titulo}</h2>
-              <p className="text-sm text-gray-500 mb-3">
-                👨‍🍳 Por: {receta.autor?.nombre || 'Desconocido'}
-              </p>
-              <p className="text-gray-600 text-sm line-clamp-2">
-                {receta.ingredientes?.substring(0, 80)}...
-              </p>
-              <span className="inline-block mt-3 text-orange-500 font-medium text-sm">
-                Ver receta →
-              </span>
-            </Link>
-          ))}
+
+        <div>
+          <label style={{ fontWeight: 'bold' }}>Correo electrónico:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
+          />
         </div>
-      )}
+
+        <div>
+          <label style={{ fontWeight: 'bold' }}>Contraseña:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
+          />
+        </div>
+
+        {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+        <button
+          type="submit"
+          style={{
+            padding: '12px',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            fontSize: '16px',
+            marginTop: '10px',
+            cursor: 'pointer'
+          }}
+        >
+          Registrarse
+        </button>
+      </form>
     </div>
-  )
+  );
 }
