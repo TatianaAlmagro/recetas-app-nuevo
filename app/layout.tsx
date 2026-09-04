@@ -1,23 +1,18 @@
-import type { Metadata } from "next";
-import Navbar from "./components/Navbar";
 import "./globals.css";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "App de Recetas",
-  description: "Encuentra y comparte recetas deliciosas",
+  description: "Tu colección de recetas",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es">
-      <body className="bg-orange-50 min-h-screen">
-        <Navbar />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
