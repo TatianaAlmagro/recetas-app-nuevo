@@ -1,25 +1,25 @@
 {
-  "name": "recetas-app-nuevo",
+  "name": "recetas-app",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.112.4",
     "next": "14.2.0",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
-    "@types/react": "^19.2.18",
-    "autoprefixer": "^10.5.5",
-    "postcss": "^8.5.28",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^7.0.2"
+    "postcss": "^8.4.49",
+    "autoprefixer": "^10.5.5"
   }
 }
