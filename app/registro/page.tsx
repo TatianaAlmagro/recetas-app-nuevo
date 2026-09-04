@@ -79,7 +79,7 @@ export default function RegistroPage() {
           type="submit"
           style={{
             padding: '12px',
-            backgroundColor: '#2563eb',
+            backgroundColor: '#16a34a',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
