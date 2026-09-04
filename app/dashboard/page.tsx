@@ -1,145 +1,92 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
-export default function EditarRecetaPage() {
-  const params = useParams()
-  const router = useRouter()
-  const recetaId = params?.id as string
+interface Receta {
+  id: string;
+  titulo: string;
+  ingredientes: string;
+  instrucciones: string;
+}
 
-  const [titulo, setTitulo] = useState('')
-  const [ingredientes, setIngredientes] = useState('')
-  const [pasos, setPasos] = useState('')
-  const [error, setError] = useState('')
-  const [cargando, setCargando] = useState(false)
-  const [cargandoDatos, setCargandoDatos] = useState(true)
+export default function DashboardPage() {
+  const [recetas, setRecetas] = useState<Receta[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const router = useRouter();
+  
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  // Cargar datos de la receta
   useEffect(() => {
-    const cargarReceta = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    verificarSesion();
+    cargarRecetas();
+  }, []);
 
-      const { data } = await supabase
+  const verificarSesion = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/registro');
+    }
+  };
+
+  const cargarRecetas = async () => {
+    try {
+      const { data, error } = await supabase
         .from('recetas')
         .select('*')
-        .eq('id', recetaId)
-        .single()
+        .order('id', { ascending: false });
 
-      // Verificar que sea el autor
-      if (data && data.autor_id === user.id) {
-        setTitulo(data.titulo)
-        setIngredientes(data.ingredientes)
-        setPasos(data.pasos)
-      } else {
-        setError('No tienes permiso para editar esta receta')
+      if (!error && data) {
+        setRecetas(data);
       }
-      setCargandoDatos(false)
+    } catch (err) {
+      console.log('Cargando recetas...');
+    } finally {
+      setCargando(false);
     }
+  };
 
-    cargarReceta()
-  }, [recetaId])
-
-  // Guardar cambios
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setCargando(true)
-    setError('')
-
-    const { error: dbError } = await supabase
-      .from('recetas')
-      .update({ titulo, ingredientes, pasos })
-      .eq('id', recetaId)
-
-    if (dbError) {
-      setError(dbError.message)
-    } else {
-      router.push('/recetas')
-      router.refresh()
-    }
-    setCargando(false)
-  }
-
-  // Eliminar receta
-  const handleEliminar = async () => {
-    if (!confirm('¿Seguro que quieres eliminar esta receta?')) return
-    
-    const { error } = await supabase
-      .from('recetas')
-      .delete()
-      .eq('id', recetaId)
-
-    if (error) {
-      alert('Error al eliminar: ' + error.message)
-    } else {
-      router.push('/recetas')
-      router.refresh()
-    }
-  }
-
-  if (cargandoDatos) return <div className="p-6">Cargando...</div>
-  if (error && !titulo) return <div className="p-6 text-red-500">{error}</div>
+  const cerrarSesion = async () => {
+    await supabase.auth.signOut();
+    router.push('/registro');
+  };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">✏️ Editar Receta</h1>
-      
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block font-medium mb-1">📌 Título</label>
-          <input
-            type="text"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-            className="w-full border rounded p-2"
-          />
-        </div>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ color: '#333' }}>📚 Mis Recetas</h1>
+        <button
+          onClick={cerrarSesion}
+          style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+        >
+          Cerrar sesión
+        </button>
+      </div>
 
-        <div>
-          <label className="block font-medium mb-1">🥗 Ingredientes</label>
-          <textarea
-            value={ingredientes}
-            onChange={(e) => setIngredientes(e.target.value)}
-            required
-            rows={4}
-            className="w-full border rounded p-2"
-          />
-        </div>
+      <p style={{ color: '#666', marginBottom: '20px' }}>Bienvenido/a! Aquí verás tu lista de recetas.</p>
 
-        <div>
-          <label className="block font-medium mb-1">📝 Pasos</label>
-          <textarea
-            value={pasos}
-            onChange={(e) => setPasos(e.target.value)}
-            required
-            rows={5}
-            className="w-full border rounded p-2"
-          />
+      {cargando ? (
+        <p>Cargando recetas...</p>
+      ) : recetas.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f9fafb', borderRadius: '10px' }}>
+          <h3>¡Aún no tienes recetas!</h3>
+          <p>Agrega tu primera receta desde el formulario.</p>
         </div>
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={cargando}
-            className="bg-blue-500 text-white px-6 py-2 rounded font-medium hover:bg-blue-600"
-          >
-             {cargando ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleEliminar}
-            className="bg-red-500 text-white px-6 py-2 rounded font-medium hover:bg-red-600"
-          >
-             Eliminar Receta
-          </button>
+      ) : (
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {recetas.map((receta) => (
+            <div key={receta.id} style={{ padding: '20px', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: '#fff' }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#1f2937' }}>{receta.titulo}</h3>
+              <p><strong>Ingredientes:</strong> {receta.ingredientes}</p>
+              <p><strong>Instrucciones:</strong> {receta.instrucciones}</p>
+            </div>
+          ))}
         </div>
-      </form>
+      )}
     </div>
-  )
+  );
 }
