@@ -93,4 +93,4 @@ export default function RegistroPage() {
       </form>
     </div>
   );
-}
+}const descripcion = "Crea tu cuenta para guardar recetas";
