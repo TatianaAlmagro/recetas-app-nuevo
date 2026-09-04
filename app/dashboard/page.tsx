@@ -67,7 +67,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <p style={{ color: '#666', marginBottom: '20px' }}>Bienvenido/a! Aquí verás tu lista de recetas.</p>
+      <p style={{ color: '#666', marginBottom: '20px' }}>Bienvenido/a! Bienvenida a tu colección de recetas.</p>
 
       {cargando ? (
         <p>Cargando recetas...</p>
